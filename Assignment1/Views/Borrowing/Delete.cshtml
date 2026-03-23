@@ -1,0 +1,30 @@
+@model Assignment1.Models.Borrowing
+@{
+    ViewData["Title"] = "Cancel Borrowing";
+}
+
+<h1>Cancel Borrowing</h1>
+<div class="alert alert-danger">
+    Are you sure you want to cancel this borrowing?
+</div>
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Book</dt>
+            <dd class="col-sm-9">@ViewBag.BookTitle</dd>
+            <dt class="col-sm-3">Reader</dt>
+            <dd class="col-sm-9">@ViewBag.ReaderName</dd>
+            <dt class="col-sm-3">Borrow Date</dt>
+            <dd class="col-sm-9">@Model.BorrowDate.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-3">Due Date</dt>
+            <dd class="col-sm-9">@Model.DueDate.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">@Model.Status</dd>
+        </dl>
+    </div>
+</div>
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Cancel Borrowing</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

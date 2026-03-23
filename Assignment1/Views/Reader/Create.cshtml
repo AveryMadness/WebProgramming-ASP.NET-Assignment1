@@ -1,0 +1,36 @@
+@model Assignment1.Models.Reader
+@{
+    ViewData["Title"] = "Add Reader";
+}
+
+<h1>Add Reader</h1>
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" type="email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input asp-for="Phone" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <input asp-for="Address" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Membership Type</label>
+        <select asp-for="MembershipType" class="form-control">
+            <option value="Standard">Standard</option>
+            <option value="Premium">Premium</option>
+            <option value="VIP">VIP</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Reader</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

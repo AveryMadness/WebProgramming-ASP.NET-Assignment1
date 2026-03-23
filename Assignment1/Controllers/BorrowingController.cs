@@ -1,131 +1,227 @@
-using System;
 using Assignment1.Models;
+using Assignment1.Repositories;
+using Assignment1.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Assignment1.Controllers
 {
-    [ApiController]
-    [Route("api/borrowings")]
-    public class BorrowingController : ControllerBase
+    public class BorrowingController : Controller
     {
-        // GET: api/borrowings
-        [HttpGet]
-        public IActionResult GetAllBorrowings()
+        private readonly BorrowingRepository _borrowingRepository;
+        private readonly BookRepository _bookRepository;
+        private readonly ReaderRepository _readerRepository;
+        private readonly SessionService _sessionService;
+
+        public BorrowingController(
+            BorrowingRepository borrowingRepository,
+            BookRepository bookRepository,
+            ReaderRepository readerRepository,
+            SessionService sessionService)
         {
-            return Ok(new
-            {
-                success = true,
-                message = "Retrieved all borrowings",
-                data = new[]
-                {
-                    new
-                    {
-                        id = 1,
-                        readerId = 1,
-                        readerName = "John Doe",
-                        bookId = 1,
-                        bookTitle = "The Great Gatsby",
-                        borrowDate = DateTime.UtcNow.AddDays(-10),
-                        dueDate = DateTime.UtcNow.AddDays(4),
-                        status = "Active"
-                    },
-                    new
-                    {
-                        id = 2,
-                        readerId = 2,
-                        readerName = "Jane Smith",
-                        bookId = 2,
-                        bookTitle = "1984",
-                        borrowDate = DateTime.UtcNow.AddDays(-20),
-                        dueDate = DateTime.UtcNow.AddDays(-6),
-                        status = "Overdue"
-                    }
-                }
-            });
+            _borrowingRepository = borrowingRepository;
+            _bookRepository = bookRepository;
+            _readerRepository = readerRepository;
+            _sessionService = sessionService;
         }
 
-        // GET: api/borrowings/{id}
-        [HttpGet("{id:int}")]
-        public IActionResult GetBorrowingById(int id)
+        public IActionResult Index()
         {
-            return Ok(new
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var borrowings = _borrowingRepository.GetAll();
+            foreach (var b in borrowings)
             {
-                success = true,
-                message = $"Retrieved borrowing with id {id}",
-                data = new
-                {
-                    id,
-                    readerId = 1,
-                    readerName = "John Doe",
-                    bookId = 1,
-                    bookTitle = "The Great Gatsby",
-                    borrowDate = DateTime.UtcNow.AddDays(-10),
-                    dueDate = DateTime.UtcNow.AddDays(4),
-                    returnDate = (DateTime?)null,
-                    status = "Active",
-                    overdueCharge = 0.00
-                }
-            });
+                b.BookId = b.BookId;
+                b.ReaderId = b.ReaderId;
+            }
+            ViewBag.Books = _bookRepository.GetAll();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View(borrowings);
         }
 
-        // POST: api/borrowings
+        public IActionResult Details(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var borrowing = _borrowingRepository.GetById(id);
+            if (borrowing == null) return NotFound();
+            
+            var book = _bookRepository.GetById(borrowing.BookId);
+            var reader = _readerRepository.GetById(borrowing.ReaderId);
+            ViewBag.BookTitle = book?.Title;
+            ViewBag.ReaderName = reader?.Name;
+            return View(borrowing);
+        }
+
+        public IActionResult Create()
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            ViewBag.Books = _bookRepository.GetAll().Where(b => b.AvailableCopies > 0).ToList();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View();
+        }
+
         [HttpPost]
-        public IActionResult CreateBorrowing([FromBody] Borrowing borrowing)
+        public IActionResult Create(Borrowing borrowing)
         {
-            if (!ModelState.IsValid)
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (ModelState.IsValid)
             {
-                return ValidationProblem(ModelState);
-            }
-
-            return Created("/api/borrowings/3", new
-            {
-                success = true,
-                message = "Borrowing created successfully",
-                data = new
+                var book = _bookRepository.GetById(borrowing.BookId);
+                if (book == null || book.AvailableCopies <= 0)
                 {
-                    id = 3,
-                    borrowing.ReaderId,
-                    borrowing.BookId,
-                    borrowDate = borrowing.BorrowDate,
-                    dueDate = borrowing.DueDate,
-                    status = borrowing.Status
+                    ModelState.AddModelError("", "Book is not available");
+                    ViewBag.Books = _bookRepository.GetAll().Where(b => b.AvailableCopies > 0).ToList();
+                    ViewBag.Readers = _readerRepository.GetAll();
+                    return View(borrowing);
                 }
-            });
+
+                borrowing.BorrowDate = DateTime.UtcNow;
+                borrowing.Status = "Active";
+                _borrowingRepository.Add(borrowing);
+                _bookRepository.UpdateAvailability(borrowing.BookId, -1);
+                return RedirectToAction("Index");
+            }
+            ViewBag.Books = _bookRepository.GetAll().Where(b => b.AvailableCopies > 0).ToList();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View(borrowing);
         }
 
-        // PUT: api/borrowings/{id}
-        [HttpPut("{id:int}")]
-        public IActionResult UpdateBorrowing(int id, [FromBody] Borrowing borrowing)
+        public IActionResult Edit(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem(ModelState);
-            }
-
-            return Ok(new
-            {
-                success = true,
-                message = $"Borrowing with id {id} updated successfully",
-                data = new
-                {
-                    id,
-                    dueDate = borrowing.DueDate,
-                    updated = DateTime.UtcNow
-                }
-            });
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var borrowing = _borrowingRepository.GetById(id);
+            if (borrowing == null) return NotFound();
+            
+            ViewBag.Books = _bookRepository.GetAll();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View(borrowing);
         }
 
-        // DELETE: api/borrowings/{id}
-        [HttpDelete("{id:int}")]
-        public IActionResult DeleteBorrowing(int id)
+        [HttpPost]
+        public IActionResult Edit(int id, Borrowing borrowing)
         {
-            return Ok(new
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (ModelState.IsValid)
             {
-                success = true,
-                message = $"Borrowing with id {id} cancelled successfully"
-            });
+                var existing = _borrowingRepository.GetById(id);
+                if (existing == null) return NotFound();
+
+                if (existing.BookId != borrowing.BookId)
+                {
+                    _bookRepository.UpdateAvailability(existing.BookId, 1);
+                    var newBook = _bookRepository.GetById(borrowing.BookId);
+                    if (newBook == null || newBook.AvailableCopies <= 0)
+                    {
+                        ModelState.AddModelError("", "Selected book is not available");
+                        ViewBag.Books = _bookRepository.GetAll();
+                        ViewBag.Readers = _readerRepository.GetAll();
+                        return View(borrowing);
+                    }
+                    _bookRepository.UpdateAvailability(borrowing.BookId, -1);
+                }
+
+                _borrowingRepository.Update(id, borrowing);
+                return RedirectToAction("Index");
+            }
+            ViewBag.Books = _bookRepository.GetAll();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View(borrowing);
+        }
+
+        public IActionResult Delete(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var borrowing = _borrowingRepository.GetById(id);
+            if (borrowing == null) return NotFound();
+            
+            var book = _bookRepository.GetById(borrowing.BookId);
+            var reader = _readerRepository.GetById(borrowing.ReaderId);
+            ViewBag.BookTitle = book?.Title;
+            ViewBag.ReaderName = reader?.Name;
+            return View(borrowing);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var borrowing = _borrowingRepository.GetById(id);
+            if (borrowing != null)
+            {
+                _bookRepository.UpdateAvailability(borrowing.BookId, 1);
+                _borrowingRepository.Delete(id);
+            }
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Return(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var borrowing = _borrowingRepository.GetById(id);
+            if (borrowing == null) return NotFound();
+            
+            borrowing.ReturnDate = DateTime.UtcNow;
+            if (borrowing.ReturnDate > borrowing.DueDate)
+            {
+                int overdueDays = ((DateTime)borrowing.ReturnDate - borrowing.DueDate).Days;
+                borrowing.OverdueCharge = overdueDays * 2;
+                borrowing.Status = "Overdue";
+            }
+            else
+            {
+                borrowing.Status = "Returned";
+                borrowing.OverdueCharge = 0;
+            }
+            
+            _bookRepository.UpdateAvailability(borrowing.BookId, 1);
+            _borrowingRepository.Update(id, borrowing);
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Overdue()
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            _borrowingRepository.CalculateOverdueCharges();
+            var overdue = _borrowingRepository.GetOverdue();
+            ViewBag.Books = _bookRepository.GetAll();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View(overdue);
+        }
+
+        public IActionResult Reports()
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            ViewBag.Books = _bookRepository.GetAll();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Reports(DateTime? startDate, DateTime? endDate, int? bookId, int? readerId, string status)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            
+            var borrowings = _borrowingRepository.GetAll();
+            
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                borrowings = borrowings.Where(b => b.BorrowDate >= startDate && b.BorrowDate <= endDate).ToList();
+            }
+            if (bookId.HasValue)
+            {
+                borrowings = borrowings.Where(b => b.BookId == bookId).ToList();
+            }
+            if (readerId.HasValue)
+            {
+                borrowings = borrowings.Where(b => b.ReaderId == readerId).ToList();
+            }
+            if (!string.IsNullOrEmpty(status))
+            {
+                borrowings = borrowings.Where(b => b.Status == status).ToList();
+            }
+
+            ViewBag.Books = _bookRepository.GetAll();
+            ViewBag.Readers = _readerRepository.GetAll();
+            return View("Index", borrowings);
         }
     }
 }
-
-

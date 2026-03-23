@@ -1,0 +1,39 @@
+@model Assignment1.Models.Borrowing
+@{
+    ViewData["Title"] = "Create Borrowing";
+    var books = ViewBag.Books as IEnumerable<Assignment1.Models.Book>;
+    var readers = ViewBag.Readers as IEnumerable<Assignment1.Models.Reader>;
+}
+
+<h1>Create Borrowing</h1>
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label class="form-label">Book</label>
+        <select asp-for="BookId" class="form-control">
+            <option value="">-- Select Book --</option>
+            @foreach (var book in books)
+            {
+                <option value="@book.Id">@book.Title - (@book.AvailableCopies available)</option>
+            }
+        </select>
+        <span asp-validation-for="BookId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Reader</label>
+        <select asp-for="ReaderId" class="form-control">
+            <option value="">-- Select Reader --</option>
+            @foreach (var reader in readers)
+            {
+                <option value="@reader.Id">@reader.Name</option>
+            }
+        </select>
+        <span asp-validation-for="ReaderId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Due Date</label>
+        <input asp-for="DueDate" class="form-control" type="date" />
+        <span asp-validation-for="DueDate" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Borrowing</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

@@ -1,0 +1,30 @@
+@model Assignment1.Models.Book
+@{
+    ViewData["Title"] = "Book Details";
+}
+
+<h1>Book Details</h1>
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Title</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+            <dt class="col-sm-3">Author</dt>
+            <dd class="col-sm-9">@Model.Author</dd>
+            <dt class="col-sm-3">ISBN</dt>
+            <dd class="col-sm-9">@Model.Isbn</dd>
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.Category</dd>
+            <dt class="col-sm-3">Total Copies</dt>
+            <dd class="col-sm-9">@Model.TotalCopies</dd>
+            <dt class="col-sm-3">Available Copies</dt>
+            <dd class="col-sm-9">@Model.AvailableCopies</dd>
+            <dt class="col-sm-3">Published Date</dt>
+            <dd class="col-sm-9">@Model.PublishedDate?.ToString("yyyy-MM-dd")</dd>
+        </dl>
+    </div>
+</div>
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</p>

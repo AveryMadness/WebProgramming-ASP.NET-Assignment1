@@ -1,0 +1,28 @@
+@model Assignment1.Models.Reader
+@{
+    ViewData["Title"] = "Reader Details";
+}
+
+<h1>Reader Details</h1>
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9">@Model.Phone</dd>
+            <dt class="col-sm-3">Address</dt>
+            <dd class="col-sm-9">@Model.Address</dd>
+            <dt class="col-sm-3">Membership Type</dt>
+            <dd class="col-sm-9">@Model.MembershipType</dd>
+            <dt class="col-sm-3">Registered Date</dt>
+            <dd class="col-sm-9">@Model.RegisteredDate.ToString("yyyy-MM-dd")</dd>
+        </dl>
+    </div>
+</div>
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</p>

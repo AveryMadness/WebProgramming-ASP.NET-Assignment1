@@ -1,0 +1,55 @@
+@model IEnumerable<Assignment1.Models.Borrowing>
+@{
+    ViewData["Title"] = "Borrowings";
+    var books = ViewBag.Books as IEnumerable<Assignment1.Models.Book>;
+    var readers = ViewBag.Readers as IEnumerable<Assignment1.Models.Reader>;
+}
+
+<h1>Borrowings</h1>
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Borrowing</a>
+    <a asp-action="Reports" class="btn btn-info">Reports</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Book</th>
+            <th>Reader</th>
+            <th>Borrow Date</th>
+            <th>Due Date</th>
+            <th>Return Date</th>
+            <th>Status</th>
+            <th>Overdue Charge</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var borrowing in Model)
+        {
+            var book = books?.FirstOrDefault(b => b.Id == borrowing.BookId);
+            var reader = readers?.FirstOrDefault(r => r.Id == borrowing.ReaderId);
+            <tr>
+                <td>@book?.Title</td>
+                <td>@reader?.Name</td>
+                <td>@borrowing.BorrowDate.ToString("yyyy-MM-dd")</td>
+                <td>@borrowing.DueDate.ToString("yyyy-MM-dd")</td>
+                <td>@borrowing.ReturnDate?.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <span class="badge bg-@(borrowing.Status == "Active" ? "primary" : borrowing.Status == "Overdue" ? "danger" : "success")">
+                        @borrowing.Status
+                    </span>
+                </td>
+                <td>$@borrowing.OverdueCharge.ToString("F2")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@borrowing.Id" class="btn btn-info btn-sm">Details</a>
+                    @if (borrowing.Status == "Active")
+                    {
+                        <a asp-action="Return" asp-route-id="@borrowing.Id" class="btn btn-success btn-sm">Return</a>
+                    }
+                    <a asp-action="Edit" asp-route-id="@borrowing.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@borrowing.Id" class="btn btn-danger btn-sm">Cancel</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

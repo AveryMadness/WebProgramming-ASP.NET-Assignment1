@@ -1,109 +1,97 @@
-using System;
 using Assignment1.Models;
+using Assignment1.Repositories;
+using Assignment1.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Assignment1.Controllers
 {
-    [ApiController]
-    [Route("api/books")]
-    public class BookController : ControllerBase
+    public class BookController : Controller
     {
-        // GET: api/books
-        [HttpGet]
-        public IActionResult GetAllBooks()
+        private readonly BookRepository _bookRepository;
+        private readonly SessionService _sessionService;
+
+        public BookController(BookRepository bookRepository, SessionService sessionService)
         {
-            return Ok(new
-            {
-                success = true,
-                message = "Retrieved all books (from BookController)",
-                data = new[]
-                {
-                    new { id = 1, title = "The Great Gatsby", author = "F. Scott Fitzgerald", available = true },
-                    new { id = 2, title = "1984", author = "George Orwell", available = true },
-                    new { id = 3, title = "To Kill a Mockingbird", author = "Harper Lee", available = false }
-                }
-            });
+            _bookRepository = bookRepository;
+            _sessionService = sessionService;
         }
 
-        // GET: api/books/{id}
-        [HttpGet("{id:int}")]
-        public IActionResult GetBookById(int id)
+        public IActionResult Index()
         {
-            return Ok(new
-            {
-                success = true,
-                message = $"Retrieved book with id {id}",
-                data = new
-                {
-                    id,
-                    title = "The Great Gatsby",
-                    author = "F. Scott Fitzgerald",
-                    isbn = "978-0-7432-7356-5",
-                    category = "Fiction",
-                    quantity = 5,
-                    available = 3
-                }
-            });
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var books = _bookRepository.GetAll();
+            return View(books);
         }
 
-        // POST: api/books
+        public IActionResult Details(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var book = _bookRepository.GetById(id);
+            if (book == null) return NotFound();
+            return View(book);
+        }
+
+        public IActionResult Create()
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            return View();
+        }
+
         [HttpPost]
-        public IActionResult CreateBook([FromBody] Book book)
+        public IActionResult Create(Book book)
         {
-            if (!ModelState.IsValid)
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (ModelState.IsValid)
             {
-                return ValidationProblem(ModelState);
+                book.AvailableCopies = book.TotalCopies;
+                _bookRepository.Add(book);
+                return RedirectToAction("Index");
             }
-
-            // No real persistence, just return some information
-            return Created("/api/books/4", new
-            {
-                success = true,
-                message = "Book created successfully",
-                data = new
-                {
-                    id = 4,
-                    book.Title,
-                    book.Author,
-                    created = DateTime.UtcNow
-                }
-            });
+            return View(book);
         }
 
-        // PUT: api/books/{id}
-        [HttpPut("{id:int}")]
-        public IActionResult UpdateBook(int id, [FromBody] Book book)
+        public IActionResult Edit(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem(ModelState);
-            }
-
-            return Ok(new
-            {
-                success = true,
-                message = $"Book with id {id} updated successfully",
-                data = new
-                {
-                    id,
-                    title = book.Title,
-                    author = book.Author,
-                    updated = DateTime.UtcNow
-                }
-            });
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var book = _bookRepository.GetById(id);
+            if (book == null) return NotFound();
+            return View(book);
         }
 
-        // DELETE: api/books/{id}
-        [HttpDelete("{id:int}")]
-        public IActionResult DeleteBook(int id)
+        [HttpPost]
+        public IActionResult Edit(int id, Book book)
         {
-            return Ok(new
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (ModelState.IsValid)
             {
-                success = true,
-                message = $"Book with id {id} deleted successfully"
-            });
+                var existingBook = _bookRepository.GetById(id);
+                if (existingBook == null) return NotFound();
+
+                int diff = book.TotalCopies - existingBook.TotalCopies;
+                book.AvailableCopies = existingBook.AvailableCopies + diff;
+                if (book.AvailableCopies < 0) book.AvailableCopies = 0;
+                if (book.AvailableCopies > book.TotalCopies) book.AvailableCopies = book.TotalCopies;
+
+                _bookRepository.Update(id, book);
+                return RedirectToAction("Index");
+            }
+            return View(book);
+        }
+
+        public IActionResult Delete(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var book = _bookRepository.GetById(id);
+            if (book == null) return NotFound();
+            return View(book);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            _bookRepository.Delete(id);
+            return RedirectToAction("Index");
         }
     }
 }
-
-

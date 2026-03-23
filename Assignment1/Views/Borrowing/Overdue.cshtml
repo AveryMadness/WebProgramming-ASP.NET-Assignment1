@@ -1,0 +1,53 @@
+@model IEnumerable<Assignment1.Models.Borrowing>
+@{
+    ViewData["Title"] = "Overdue Borrowings";
+    var books = ViewBag.Books as IEnumerable<Assignment1.Models.Book>;
+    var readers = ViewBag.Readers as IEnumerable<Assignment1.Models.Reader>;
+}
+
+<h1>Overdue Borrowings</h1>
+<p>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</p>
+@if (!Model.Any())
+{
+    <div class="alert alert-success">No overdue borrowings!</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Reader</th>
+                <th>Due Date</th>
+                <th>Days Overdue</th>
+                <th>Overdue Charge</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var borrowing in Model)
+            {
+                var book = books?.FirstOrDefault(b => b.Id == borrowing.BookId);
+                var reader = readers?.FirstOrDefault(r => r.Id == borrowing.ReaderId);
+                var daysOverdue = (DateTime.UtcNow - borrowing.DueDate).Days;
+                <tr>
+                    <td>@book?.Title</td>
+                    <td>@reader?.Name</td>
+                    <td class="text-danger">@borrowing.DueDate.ToString("yyyy-MM-dd")</td>
+                    <td class="text-danger">@daysOverdue days</td>
+                    <td class="text-danger">$@borrowing.OverdueCharge.ToString("F2")</td>
+                    <td>
+                        <a asp-action="Return" asp-route-id="@borrowing.Id" class="btn btn-success btn-sm">Return</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5>Total Overdue Charges: $@Model.Sum(b => b.OverdueCharge).ToString("F2")</h5>
+        </div>
+    </div>
+}

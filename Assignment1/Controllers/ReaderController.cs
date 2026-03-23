@@ -1,108 +1,88 @@
-using System;
 using Assignment1.Models;
+using Assignment1.Repositories;
+using Assignment1.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Assignment1.Controllers
 {
-    [ApiController]
-    [Route("api/readers")]
-    public class ReaderController : ControllerBase
+    public class ReaderController : Controller
     {
-        // GET: api/readers
-        [HttpGet]
-        public IActionResult GetAllReaders()
+        private readonly ReaderRepository _readerRepository;
+        private readonly SessionService _sessionService;
+
+        public ReaderController(ReaderRepository readerRepository, SessionService sessionService)
         {
-            return Ok(new
-            {
-                success = true,
-                message = "Retrieved all readers",
-                data = new[]
-                {
-                    new { id = 1, name = "John Doe", email = "john@email.com", membershipType = "Premium" },
-                    new { id = 2, name = "Jane Smith", email = "jane@email.com", membershipType = "Standard" },
-                    new { id = 3, name = "Bob Johnson", email = "bob@email.com", membershipType = "Standard" }
-                }
-            });
+            _readerRepository = readerRepository;
+            _sessionService = sessionService;
         }
 
-        // GET: api/readers/{id}
-        [HttpGet("{id:int}")]
-        public IActionResult GetReaderById(int id)
+        public IActionResult Index()
         {
-            return Ok(new
-            {
-                success = true,
-                message = $"Retrieved reader with id {id}",
-                data = new
-                {
-                    id,
-                    name = "John Doe",
-                    email = "john@email.com",
-                    phone = "555-0101",
-                    address = "123 Main St",
-                    membershipType = "Premium",
-                    registeredDate = DateTime.UtcNow.AddMonths(-6)
-                }
-            });
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var readers = _readerRepository.GetAll();
+            return View(readers);
         }
 
-        // POST: api/readers
+        public IActionResult Details(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var reader = _readerRepository.GetById(id);
+            if (reader == null) return NotFound();
+            return View(reader);
+        }
+
+        public IActionResult Create()
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            return View();
+        }
+
         [HttpPost]
-        public IActionResult CreateReader([FromBody] Reader reader)
+        public IActionResult Create(Reader reader)
         {
-            if (!ModelState.IsValid)
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (ModelState.IsValid)
             {
-                return ValidationProblem(ModelState);
+                _readerRepository.Add(reader);
+                return RedirectToAction("Index");
             }
-
-            return Created("/api/readers/4", new
-            {
-                success = true,
-                message = "Reader created successfully",
-                data = new
-                {
-                    id = 4,
-                    reader.Name,
-                    reader.Email,
-                    registeredDate = DateTime.UtcNow
-                }
-            });
+            return View(reader);
         }
 
-        // PUT: api/readers/{id}
-        [HttpPut("{id:int}")]
-        public IActionResult UpdateReader(int id, [FromBody] Reader reader)
+        public IActionResult Edit(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem(ModelState);
-            }
-
-            return Ok(new
-            {
-                success = true,
-                message = $"Reader with id {id} updated successfully",
-                data = new
-                {
-                    id,
-                    name = reader.Name,
-                    email = reader.Email,
-                    updated = DateTime.UtcNow
-                }
-            });
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var reader = _readerRepository.GetById(id);
+            if (reader == null) return NotFound();
+            return View(reader);
         }
 
-        // DELETE: api/readers/{id}
-        [HttpDelete("{id:int}")]
-        public IActionResult DeleteReader(int id)
+        [HttpPost]
+        public IActionResult Edit(int id, Reader reader)
         {
-            return Ok(new
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (ModelState.IsValid)
             {
-                success = true,
-                message = $"Reader with id {id} deleted successfully"
-            });
+                _readerRepository.Update(id, reader);
+                return RedirectToAction("Index");
+            }
+            return View(reader);
+        }
+
+        public IActionResult Delete(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            var reader = _readerRepository.GetById(id);
+            if (reader == null) return NotFound();
+            return View(reader);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            _readerRepository.Delete(id);
+            return RedirectToAction("Index");
         }
     }
 }
-
-

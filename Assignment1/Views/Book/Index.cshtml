@@ -1,0 +1,44 @@
+@model IEnumerable<Assignment1.Models.Book>
+@{
+    ViewData["Title"] = "Books";
+}
+
+<h1>Books</h1>
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add New Book</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Category</th>
+            <th>Total Copies</th>
+            <th>Available</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+                <td>@book.Isbn</td>
+                <td>@book.Category</td>
+                <td>@book.TotalCopies</td>
+                <td>
+                    <span class="badge bg-@(book.AvailableCopies > 0 ? "success" : "danger")">
+                        @book.AvailableCopies
+                    </span>
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-info btn-sm">Details</a>
+                    <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@book.Id" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
