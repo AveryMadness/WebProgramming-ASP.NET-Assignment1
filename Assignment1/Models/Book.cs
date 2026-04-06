@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Assignment1.Models
 {
-    //Represents a book in the Library Management System.
     public class Book
     {
+        [Key]
         public int Id { get; set; }
 
         [Required]
@@ -32,7 +33,7 @@ namespace Assignment1.Models
 
         [DataType(DataType.Date)]
         public DateTime? PublishedDate { get; set; }
+
+        public virtual ICollection<Borrowing> Borrowings { get; set; } = new List<Borrowing>();
     }
 }
-
-

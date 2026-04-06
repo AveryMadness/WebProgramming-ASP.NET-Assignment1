@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Assignment1.Models
 {
-    //Represents a library reader / member.
     public class Reader
     {
+        [Key]
         public int Id { get; set; }
 
         [Required]
@@ -30,7 +31,7 @@ namespace Assignment1.Models
 
         [DataType(DataType.Date)]
         public DateTime RegisteredDate { get; set; } = DateTime.UtcNow;
+
+        public virtual ICollection<Borrowing> Borrowings { get; set; } = new List<Borrowing>();
     }
 }
-
-

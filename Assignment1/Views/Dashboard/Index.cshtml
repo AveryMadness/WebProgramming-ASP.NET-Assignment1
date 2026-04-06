@@ -5,7 +5,7 @@
 
 <div class="text-center mb-4">
     <h1>Library Management System</h1>
-    <p class="text-muted">Welcome, @user.Username</p>
+    <p class="text-muted">Welcome back, <strong>@user.Username</strong>!</p>
 </div>
 
 <div class="row">
@@ -14,6 +14,7 @@
             <div class="card-body">
                 <h5 class="card-title">Total Books</h5>
                 <h2>@ViewBag.TotalBooks</h2>
+                <a asp-controller="Book" asp-action="Index" class="text-white stretched-link text-decoration-none">View All</a>
             </div>
         </div>
     </div>
@@ -22,6 +23,7 @@
             <div class="card-body">
                 <h5 class="card-title">Available Copies</h5>
                 <h2>@ViewBag.AvailableBooks</h2>
+                <span class="text-white-50">Books in stock</span>
             </div>
         </div>
     </div>
@@ -30,6 +32,7 @@
             <div class="card-body">
                 <h5 class="card-title">Total Readers</h5>
                 <h2>@ViewBag.TotalReaders</h2>
+                <a asp-controller="Reader" asp-action="Index" class="text-white stretched-link text-decoration-none">View All</a>
             </div>
         </div>
     </div>
@@ -38,32 +41,80 @@
             <div class="card-body">
                 <h5 class="card-title">Active Borrowings</h5>
                 <h2>@ViewBag.ActiveBorrowings</h2>
+                <a asp-controller="Borrowing" asp-action="Index" class="text-white stretched-link text-decoration-none">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-2">
+    <div class="col-md-3">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Overdue Books</h5>
+                <h2>@ViewBag.OverdueBorrowings</h2>
+                <a asp-controller="Borrowing" asp-action="Overdue" class="text-white stretched-link text-decoration-none">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Returned Books</h5>
+                <h2>@ViewBag.ReturnedBorrowings</h2>
+                <span class="text-white-50">Completed</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-dark mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Transactions</h5>
+                <h2>@ViewBag.TotalBorrowings</h2>
+                <span class="text-white-50">All time</span>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row mt-4">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h5>Overdue Books</h5>
-            </div>
-            <div class="card-body">
-                <h3 class="text-danger">@ViewBag.OverdueBorrowings</h3>
-                <a asp-controller="Borrowing" asp-action="Overdue" class="btn btn-outline-danger btn-sm">View Overdue</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header bg-primary text-white">
                 <h5>Quick Actions</h5>
             </div>
             <div class="card-body">
-                <a asp-controller="Book" asp-action="Create" class="btn btn-primary mb-2">Add New Book</a>
-                <a asp-controller="Reader" asp-action="Create" class="btn btn-primary mb-2">Add New Reader</a>
-                <a asp-controller="Borrowing" asp-action="Create" class="btn btn-primary mb-2">Create Borrowing</a>
+                <div class="d-grid gap-2">
+                    <a asp-controller="Book" asp-action="Create" class="btn btn-primary">Add New Book</a>
+                    <a asp-controller="Reader" asp-action="Create" class="btn btn-info">Add New Reader</a>
+                    <a asp-controller="Borrowing" asp-action="Create" class="btn btn-success">Create Borrowing</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5>Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-controller="Borrowing" asp-action="Reports" class="btn btn-warning">Generate Reports</a>
+                    <a asp-controller="Borrowing" asp-action="Overdue" class="btn btn-danger">Manage Overdue</a>
+                    <a asp-controller="Borrowing" asp-action="Index" class="btn btn-secondary">All Borrowings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5>System Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Database:</strong> SQL Server</p>
+                <p><strong>User Role:</strong> @user.Role</p>
+                <p><strong>Date:</strong> @DateTime.Now.ToString("yyyy-MM-dd")</p>
             </div>
         </div>
     </div>

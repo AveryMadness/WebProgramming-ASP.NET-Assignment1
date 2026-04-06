@@ -1,32 +1,49 @@
-using Assignment1.Models;
-using Assignment1.Repositories;
-using Assignment1.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Assignment1.Data;
+using Assignment1.Models;
+using Assignment1.Services;
 
 namespace Assignment1.Controllers
 {
     public class ReaderController : Controller
     {
-        private readonly ReaderRepository _readerRepository;
+        private readonly LMSDbContext _context;
         private readonly SessionService _sessionService;
 
-        public ReaderController(ReaderRepository readerRepository, SessionService sessionService)
+        public ReaderController(LMSDbContext context, SessionService sessionService)
         {
-            _readerRepository = readerRepository;
+            _context = context;
             _sessionService = sessionService;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string searchString, string membershipType)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
-            var readers = _readerRepository.GetAll();
-            return View(readers);
+
+            var readers = from r in _context.Readers select r;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                readers = readers.Where(r => r.Name.Contains(searchString) || r.Email.Contains(searchString) || (r.Phone != null && r.Phone.Contains(searchString)));
+            }
+
+            if (!string.IsNullOrEmpty(membershipType))
+            {
+                readers = readers.Where(r => r.MembershipType == membershipType);
+            }
+
+            ViewBag.MembershipTypes = new List<string> { "Standard", "Premium", "VIP" };
+            ViewBag.SearchString = searchString;
+            ViewBag.SelectedMembershipType = membershipType;
+
+            return View(readers.ToList());
         }
 
         public IActionResult Details(int id)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
-            var reader = _readerRepository.GetById(id);
+            var reader = _context.Readers.Include(r => r.Borrowings).ThenInclude(b => b.Book).FirstOrDefault(r => r.Id == id);
             if (reader == null) return NotFound();
             return View(reader);
         }
@@ -38,12 +55,15 @@ namespace Assignment1.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Reader reader)
+        [ValidateAntiForgeryToken]
+        public IActionResult Create([Bind("Id,Name,Email,Phone,Address,MembershipType")] Reader reader)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
             if (ModelState.IsValid)
             {
-                _readerRepository.Add(reader);
+                reader.RegisteredDate = DateTime.UtcNow;
+                _context.Readers.Add(reader);
+                _context.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(reader);
@@ -52,18 +72,22 @@ namespace Assignment1.Controllers
         public IActionResult Edit(int id)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
-            var reader = _readerRepository.GetById(id);
+            var reader = _context.Readers.Find(id);
             if (reader == null) return NotFound();
             return View(reader);
         }
 
         [HttpPost]
-        public IActionResult Edit(int id, Reader reader)
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, [Bind("Id,Name,Email,Phone,Address,MembershipType,RegisteredDate")] Reader reader)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
+            if (id != reader.Id) return NotFound();
+            
             if (ModelState.IsValid)
             {
-                _readerRepository.Update(id, reader);
+                _context.Update(reader);
+                _context.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(reader);
@@ -72,16 +96,22 @@ namespace Assignment1.Controllers
         public IActionResult Delete(int id)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
-            var reader = _readerRepository.GetById(id);
+            var reader = _context.Readers.Find(id);
             if (reader == null) return NotFound();
             return View(reader);
         }
 
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
             if (!_sessionService.IsLoggedIn()) return RedirectToAction("Login", "Auth");
-            _readerRepository.Delete(id);
+            var reader = _context.Readers.Find(id);
+            if (reader != null)
+            {
+                _context.Readers.Remove(reader);
+                _context.SaveChanges();
+            }
             return RedirectToAction("Index");
         }
     }

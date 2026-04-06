@@ -1,4 +1,5 @@
-using Assignment1.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Assignment1.Data;
 using Assignment1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,13 +15,19 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<BookRepository>();
-builder.Services.AddScoped<ReaderRepository>();
-builder.Services.AddScoped<BorrowingRepository>();
+builder.Services.AddDbContext<LMSDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("LMSConnection")));
+
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SessionService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<LMSDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

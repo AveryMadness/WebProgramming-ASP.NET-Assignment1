@@ -1,25 +1,18 @@
-using Assignment1.Repositories;
-using Assignment1.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Assignment1.Data;
+using Assignment1.Services;
 
 namespace Assignment1.Controllers
 {
     public class DashboardController : Controller
     {
-        private readonly BookRepository _bookRepository;
-        private readonly ReaderRepository _readerRepository;
-        private readonly BorrowingRepository _borrowingRepository;
+        private readonly LMSDbContext _context;
         private readonly SessionService _sessionService;
 
-        public DashboardController(
-            BookRepository bookRepository,
-            ReaderRepository readerRepository,
-            BorrowingRepository borrowingRepository,
-            SessionService sessionService)
+        public DashboardController(LMSDbContext context, SessionService sessionService)
         {
-            _bookRepository = bookRepository;
-            _readerRepository = readerRepository;
-            _borrowingRepository = borrowingRepository;
+            _context = context;
             _sessionService = sessionService;
         }
 
@@ -33,11 +26,13 @@ namespace Assignment1.Controllers
             var user = _sessionService.GetSession();
             ViewBag.User = user;
 
-            ViewBag.TotalBooks = _bookRepository.GetAll().Count;
-            ViewBag.AvailableBooks = _bookRepository.GetAll().Sum(b => b.AvailableCopies);
-            ViewBag.TotalReaders = _readerRepository.GetAll().Count;
-            ViewBag.ActiveBorrowings = _borrowingRepository.GetByStatus("Active").Count;
-            ViewBag.OverdueBorrowings = _borrowingRepository.GetOverdue().Count;
+            ViewBag.TotalBooks = _context.Books.Count();
+            ViewBag.AvailableBooks = _context.Books.Sum(b => b.AvailableCopies);
+            ViewBag.TotalReaders = _context.Readers.Count();
+            ViewBag.ActiveBorrowings = _context.Borrowings.Where(b => b.Status == "Active").Count();
+            ViewBag.OverdueBorrowings = _context.Borrowings.Where(b => b.Status == "Overdue").Count();
+            ViewBag.TotalBorrowings = _context.Borrowings.Count();
+            ViewBag.ReturnedBorrowings = _context.Borrowings.Where(b => b.Status == "Returned").Count();
 
             return View();
         }

@@ -2,51 +2,88 @@
     ViewData["Title"] = "Reports";
     var books = ViewBag.Books as IEnumerable<Assignment1.Models.Book>;
     var readers = ViewBag.Readers as IEnumerable<Assignment1.Models.Reader>;
+    var statusList = ViewBag.StatusList as List<string>;
 }
 
 <h1>Borrowing Reports</h1>
-<form asp-action="Reports" method="post" class="mb-4">
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5>Generate Report</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="GenerateReport" method="post">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="startDate" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="endDate" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Book</label>
+                    <select name="bookId" class="form-select">
+                        <option value="">All Books</option>
+                        @if (books != null)
+                        {
+                            @foreach (var book in books)
+                            {
+                                <option value="@book.Id">@book.Title</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Reader</label>
+                    <select name="readerId" class="form-select">
+                        <option value="">All Readers</option>
+                        @if (readers != null)
+                        {
+                            @foreach (var reader in readers)
+                            {
+                                <option value="@reader.Id">@reader.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        @if (statusList != null)
+                        {
+                            @foreach (var s in statusList)
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-9 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Generate Report</button>
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h5>Quick Reports</h5>
     <div class="row">
         <div class="col-md-3">
-            <label class="form-label">Start Date</label>
-            <input type="date" name="startDate" class="form-control" />
+            <a asp-action="Index" asp-route-status="Active" class="btn btn-primary w-100 mb-2">Active Borrowings</a>
         </div>
         <div class="col-md-3">
-            <label class="form-label">End Date</label>
-            <input type="date" name="endDate" class="form-control" />
+            <a asp-action="Overdue" class="btn btn-danger w-100 mb-2">Overdue Books</a>
         </div>
-        <div class="col-md-2">
-            <label class="form-label">Book</label>
-            <select name="bookId" class="form-control">
-                <option value="">All Books</option>
-                @foreach (var book in books)
-                {
-                    <option value="@book.Id">@book.Title</option>
-                }
-            </select>
+        <div class="col-md-3">
+            <a asp-action="Index" asp-route-status="Returned" class="btn btn-success w-100 mb-2">Returned Books</a>
         </div>
-        <div class="col-md-2">
-            <label class="form-label">Reader</label>
-            <select name="readerId" class="form-control">
-                <option value="">All Readers</option>
-                @foreach (var reader in readers)
-                {
-                    <option value="@reader.Id">@reader.Name</option>
-                }
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-control">
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Returned">Returned</option>
-                <option value="Overdue">Overdue</option>
-            </select>
+        <div class="col-md-3">
+            <a asp-action="Index" class="btn btn-secondary w-100 mb-2">All Borrowings</a>
         </div>
     </div>
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">Generate Report</button>
-        <a asp-action="Index" class="btn btn-secondary">Clear</a>
-    </div>
-</form>
+</div>
